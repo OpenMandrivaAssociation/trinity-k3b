@@ -1,12 +1,21 @@
-#
-# Please submit bugfixes or comments via http://www.trinitydesktop.org/
-#
+%bcond clang 1
+%bcond gamin 1
+%bcond hal 0
+%bcond sndfile 1
+%bcond samplerate 1
+%bcond dvdread 1
+%bcond libmad 1
+%bcond lame 1
+%bcond ffmpeg 1
+%bcond musepack 1
 
 # TDE variables
 %define tde_epoch 2
 %if "%{?tde_version}" == ""
 %define tde_version 14.1.5
 %endif
+%define pkg_rel 2
+
 %define tde_pkg k3b
 %define tde_prefix /opt/trinity
 %define tde_appdir %{tde_datadir}/applications
@@ -22,32 +31,25 @@
 %define tde_tdeincludedir %{tde_includedir}/tde
 %define tde_tdelibdir %{tde_libdir}/trinity
 
-%if 0%{?mdkversion}
 %undefine __brp_remove_la_files
 %define dont_remove_libtool_files 1
 %define _disable_rebuild_configure 1
-%endif
 
 # fixes error: Empty %files file …/debugsourcefiles.list
 %define _debugsource_template %{nil}
 
 %define tarball_name %{tde_pkg}-trinity
-%global toolchain %(readlink /usr/bin/cc)
 
 
 Name:			trinity-%{tde_pkg}
 Epoch:			%{tde_epoch}
 Version:		1.0.5
-Release:		%{?tde_version}_%{?!preversion:1}%{?preversion:0_%{preversion}}%{?dist}
+Release:		%{?tde_version}_%{?!preversion:%{pkg_rel}}%{?preversion:0_%{preversion}}%{?dist}
 Summary:		CD/DVD burning application
 Group:			Applications/Archiving
 URL:			http://www.trinitydesktop.org/
 
-%if 0%{?suse_version}
-License:	GPL-2.0+
-%else
 License:	GPLv2+
-%endif
 
 #Vendor:		Trinity Desktop
 #Packager:	Francois Andriot <francois.andriot@free.fr>
@@ -55,26 +57,39 @@ License:	GPLv2+
 Source0:		https://mirror.ppa.trinitydesktop.org/trinity/releases/R%{tde_version}/main/applications/multimedia/%{tarball_name}-%{tde_version}%{?preversion:~%{preversion}}.tar.xz
 Source1:		%{name}-rpmlintrc
 
-BuildRequires:  cmake make
+BuildSystem:    cmake
+BuildOption:    -DCMAKE_BUILD_TYPE="RelWithDebInfo"
+BuildOption:    -DCMAKE_SKIP_RPATH=OFF
+BuildOption:    -DCMAKE_SKIP_INSTALL_RPATH=OFF
+BuildOption:    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+BuildOption:    -DCMAKE_INSTALL_RPATH="%{tde_libdir}"
+BuildOption:    -DCMAKE_NO_BUILTIN_CHRPATH=ON
+BuildOption:    -DCMAKE_PROGRAM_PATH="%{tde_bindir}"
+BuildOption:    -DCMAKE_INSTALL_PREFIX=%{tde_prefix}
+BuildOption:    -DBIN_INSTALL_DIR=%{tde_bindir}
+BuildOption:    -DCONFIG_INSTALL_DIR="%{tde_confdir}"
+BuildOption:    -DINCLUDE_INSTALL_DIR=%{tde_tdeincludedir}
+BuildOption:    -DLIB_INSTALL_DIR=%{tde_libdir}
+BuildOption:    -DSHARE_INSTALL_PREFIX=%{tde_datadir}
+BuildOption:    -DWITH_ALL_OPTIONS="ON"
+BuildOption:    -DWITH_MUSICBRAINZ="OFF"
+%{?with_ffmpeg:BuildOption:    -DWITH_FFMPEG_ALL_CODECS="ON"}
+%{!?with_musepack:BuildOption:    -DWITH_MUSEPACK=OFF}
+%{?with_musepack:BuildOption:    -DWITH_MUSEPACK=ON}
+%{!?with_lame:BuildOption:    -DWITH_LAME=OFF}
+%{?with_lame:BuildOption:    -DWITH_LAME=ON}
+%{!?with_libmad:BuildOption:    -DWITH_MAD=OFF}
+%{?with_libmad:BuildOption:    -DWITH_MAD=ON}
+
 BuildRequires:	trinity-tdelibs-devel >= %{tde_version}
 BuildRequires:	trinity-tdebase-devel >= %{tde_version}
 BuildRequires:	desktop-file-utils
 
 BuildRequires:	trinity-tde-cmake >= %{tde_version}
-%if "%{?toolchain}" != "clang"
-BuildRequires:	gcc-c++
-%endif
+
+%{!?with_clang:BuildRequires:	gcc-c++}
+
 BuildRequires:	pkgconfig
-
-# SUSE desktop files utility
-%if 0%{?suse_version}
-BuildRequires:	update-desktop-files
-%endif
-
-%if 0%{?opensuse_bs} && 0%{?suse_version}
-# for xdg-menu script
-BuildRequires:	brp-check-trinity
-%endif
 
 # ALSA supportl
 BuildRequires:  pkgconfig(alsa)
@@ -91,11 +106,7 @@ BuildRequires: pkgconfig(vorbis)
 BuildRequires:	pkgconfig(libidn)
 
 # GAMIN support
-#  Not on openSUSE.
-%if 0%{!?suse_version}
-%define with_gamin 1
-BuildRequires:	pkgconfig(gamin)
-%endif
+%{?with_gamin:BuildRequires:	pkgconfig(gamin)}
 
 # OPENSSL support
 BuildRequires:  pkgconfig(openssl)
@@ -112,98 +123,48 @@ Requires(postun): coreutils
 Requires:		%{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:		%{name}-common = %{?epoch:%{epoch}:}%{version}-%{release}
 
-%if 0%{?suse_version} >= 1310 && 0%{?suse_version} < 1500 || 0%{?fedora} >= 29
-Requires:		wodim
-REquires:		genisoimage
-%else
 Requires:		cdrecord
-REquires:		mkisofs
-%endif
+Requires:		mkisofs
 Requires:		dvd+rw-tools
 
 # CDRDAO support
-%if 0%{?mdkversion} || 0%{?mgaversion} || 0%{?fedora} || 0%{?suse_version} || 0%{?rhel} >= 5
 Requires:		cdrdao
-%endif
 
 # UDEV support
 BuildRequires:  pkgconfig(udev)
 
 # HAL support
-%if 0%{?rhel} == 5
-%define with_hal 0
-BuildRequires:	hal-devel
-%endif
+%{?with_hal:BuildRequires:	hal-devel}
 
 # DBUS support
-#  TQT bindings not available for RHEL4
-%if 0%{?rhel} == 4
-# Dbus bindings were rebuilt with Qt support
-BuildRequires:	dbus-devel >= 0.22-12.EL.9p1
-Requires:		dbus-qt >= 0.22-12.EL.9p1
-%else
 BuildRequires:	trinity-dbus-tqt-devel >= 1:0.63
 Requires:		trinity-dbus-tqt >= 1:0.63
-%endif
 
 # SNDFILE support
-%define with_sndfile 1
-BuildRequires:  pkgconfig(sndfile)
+%{?with_sndfile:BuildRequires:  pkgconfig(sndfile)}
 
 # SAMPLERATE support
-%define with_samplerate 1
-BuildRequires:  pkgconfig(samplerate)
+%{?with_samplerate:BuildRequires:  pkgconfig(samplerate)}
 
 # DVDREAD support
-%define with_dvdread 1
-BuildRequires:  pkgconfig(dvdread)
+%{?with_dvdread:BuildRequires:  pkgconfig(dvdread)}
 
 # FLAC support
 BuildRequires:  pkgconfig(flac)
 BuildRequires:  pkgconfig(flac++)
 
 # MAD support
-%define with_libmad 1
-BuildRequires:  pkgconfig(mad)
+%{?with_libmad:BuildRequires:  pkgconfig(mad)}
 
 # LAME support
-%if 0%{?opensuse_bs} == 0
-%if 0%{?mdkversion} || 0%{?mgaversion} || 0%{?fedora} || 0%{?suse_version} || 0%{?rhel}
-%define with_lame 1
-%if 0%{?mgaversion} || 0%{?mdkversion}
-%if 0%{?pclinuxos}
-BuildRequires:	liblame-devel
-%else
-%if 0%{?mgaversion} >= 6
-BuildRequires:		%{_lib}mp3lame-devel
-%else
-BuildRequires:		%{_lib}lame-devel
-%endif
-%endif
-%endif
-%if 0%{?suse_version}
-BuildRequires:	libmp3lame-devel
-%endif
-%if 0%{?fedora} || 0%{?rhel}
-BuildRequires:	lame-devel
-%endif
-%endif
-%endif
+%{?with_lame:BuildRequires:  pkgconfig(lame)}
 
 # FFMPEG support
-%define with_ffmpeg 1
-BuildRequires:  pkgconfig(libavcodec)
+%{?with_ffmpeg:BuildRequires:  pkgconfig(libavcodec)}
 
 # MUSEPACK
-%if 0%{?fedora} == 0 || 0%{?fedora} <= 37
-# Looking for mpc_decoder_setup in mpcdec - not found
-%define with_musepack 1
-%if 0%{?mdkversion} || 0%{?mgaversion}
-BuildRequires:	%{_lib}mpcdec-devel
-%else
-BuildRequires:	libmpcdec-devel
-%endif
-%endif
+%{?with_musepack:BuildRequires:	%{_lib}mpcdec-devel}
+
 
 BuildRequires:  pkgconfig(xrender)
 BuildRequires:  pkgconfig(x11)
@@ -239,11 +200,11 @@ start.
 %{tde_tdelibdir}/libk3bexternalencoder.so
 %{tde_tdelibdir}/libk3bflacdecoder.la
 %{tde_tdelibdir}/libk3bflacdecoder.so
-%if 0%{?with_sndfile}
+%if %{with sndfile}
 %{tde_tdelibdir}/libk3blibsndfiledecoder.la
 %{tde_tdelibdir}/libk3blibsndfiledecoder.so
 %endif
-%if 0%{?with_musepack}
+%if %{with musepack}
 %{tde_tdelibdir}/libk3bmpcdecoder.la
 %{tde_tdelibdir}/libk3bmpcdecoder.so
 %endif
@@ -264,9 +225,7 @@ start.
 Summary:		Common files of %{name}
 Group:			Applications/Archiving
 Requires:		%{name} = %{?epoch:%{epoch}:}%{version}-%{release}
-%if 0%{?rhel} >= 6 || 0%{?fedora} >= 15 || 0%{?mgaversion} || 0%{?mdkversion}
 BuildArch: noarch
-%endif
 
 %description common
 %{summary}.
@@ -327,7 +286,7 @@ Requires:		%{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
 
 ##########
 
-%if 0%{?with_libmad}
+%if %{with libmad}
 %package plugin-mad
 Summary:		The MAD plugin for K3B
 Group:			System Environment/Libraries
@@ -349,7 +308,7 @@ and Layer III a.k.a. MP3) are fully implemented.
 
 ##########
 
-%if 0%{?with_lame}
+%if %{with lame}
 %package plugin-lame
 Summary:		The LAME plugin for K3B
 Group:			System Environment/Libraries
@@ -371,7 +330,7 @@ This package is in tainted, as MP3 encoding is covered by software patents.
 
 ##########
 
-%if 0%{?with_ffmpeg}
+%if %{with ffmpeg}
 %package plugin-ffmpeg
 Summary:		The FFMPEG plugin for K3B
 Group:			System Environment/Libraries
@@ -389,70 +348,13 @@ and a generic audio and video file converter.
 %{tde_tdelibdir}/libk3bffmpegdecoder.so
 %endif
 
-##########
-
-%if 0%{?suse_version} && 0%{?opensuse_bs} == 0
-%debug_package
-%endif
-
-##########
-
-
-%prep
-%autosetup -n %{tarball_name}-%{tde_version}%{?preversion:~%{preversion}}
-
-
-%build
+%conf -p
 unset QTDIR QTINC QTLIB
 export PATH="%{tde_bindir}:${PATH}"
 export PKG_CONFIG_PATH="%{tde_libdir}/pkgconfig:${PKG_CONFIG_PATH}"
 
-%if 0%{?rhel} == 7
-RPM_OPT_FLAGS="${RPM_OPT_FLAGS} -std=c++11"
-%endif
 
-if ! rpm -E %%cmake|grep -e 'cd build\|cd ${CMAKE_BUILD_DIR:-build}'; then
-  %__mkdir_p build
-  cd build
-fi
-
-%cmake \
-  -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
-  -DCMAKE_C_FLAGS="${RPM_OPT_FLAGS}" \
-  -DCMAKE_CXX_FLAGS="${RPM_OPT_FLAGS}" \
-  -DCMAKE_SKIP_RPATH=OFF \
-  -DCMAKE_SKIP_INSTALL_RPATH=OFF \
-  -DCMAKE_INSTALL_RPATH="%{tde_libdir}" \
-  -DCMAKE_NO_BUILTIN_CHRPATH=ON \
-  -DCMAKE_VERBOSE_MAKEFILE=ON \
-  -DCMAKE_PROGRAM_PATH="%{tde_bindir}" \
-  -DWITH_GCC_VISIBILITY=OFF \
-  \
-  -DCMAKE_INSTALL_PREFIX=%{tde_prefix} \
-  -DBIN_INSTALL_DIR=%{tde_bindir} \
-  -DCONFIG_INSTALL_DIR="%{tde_confdir}" \
-  -DINCLUDE_INSTALL_DIR=%{tde_tdeincludedir} \
-  -DLIB_INSTALL_DIR=%{tde_libdir} \
-  -DSHARE_INSTALL_PREFIX=%{tde_datadir} \
-  \
-  -DWITH_ALL_OPTIONS="ON" \
-  -DWITH_MUSICBRAINZ="OFF" \
-  -DWITH_FFMPEG_ALL_CODECS="ON" \
-  -DWITH_MUSEPACK="%{!?with_musepack:OFF}%{?with_musepack:ON}" \
-  -DWITH_LAME="%{!?with_lame:OFF}%{?with_lame:ON}" \
-  -DWITH_MAD="%{!?with_libmad:OFF}%{?with_libmad:ON}" \
-%if 0%{?rhel} == 5
-  -DWITH_HAL="ON" \
-%endif
-  ..
-
-%__make %{?_smp_mflags} || %__make
-
-
-%install
-export PATH="%{tde_bindir}:${PATH}"
-%__make install DESTDIR=%{?buildroot} -C build
-
+%install -a
 # remove the .la files
 %__rm -f %{buildroot}%{tde_libdir}/libk3b*.la 
 
