@@ -10,11 +10,9 @@
 %bcond musepack 1
 
 # TDE variables
-%define tde_epoch 2
 %if "%{?tde_version}" == ""
 %define tde_version 14.1.5
 %endif
-%define pkg_rel 3
 
 %define tde_pkg k3b
 %define tde_prefix /opt/trinity
@@ -31,9 +29,8 @@
 
 
 Name:			trinity-%{tde_pkg}
-Epoch:			%{tde_epoch}
 Version:		1.0.5
-Release:		%{?tde_version}_%{?!preversion:%{pkg_rel}}%{?preversion:0_%{preversion}}%{?dist}
+Release:		%{?tde_version:%{tde_version}_}4
 Summary:		CD/DVD burning application
 Group:			Applications/Archiving
 URL:			http://www.trinitydesktop.org/
@@ -41,7 +38,7 @@ URL:			http://www.trinitydesktop.org/
 License:	GPLv2+
 
 
-Source0:		https://mirror.ppa.trinitydesktop.org/trinity/releases/R%{tde_version}/main/applications/multimedia/%{tarball_name}-%{tde_version}%{?preversion:~%{preversion}}.tar.xz
+Source0:		https://mirror.ppa.trinitydesktop.org/trinity/releases/R%{tde_version}/main/applications/multimedia/%{tarball_name}-%{tde_version}.tar.xz
 Source1:		%{name}-rpmlintrc
 
 BuildSystem:    cmake
@@ -61,6 +58,7 @@ BuildOption:    -DWITH_MAD=%{!?with_libmad:OFF}%{?with_libmad:ON}
 
 BuildRequires:	trinity-tdelibs-devel >= %{tde_version}
 BuildRequires:	trinity-tdebase-devel >= %{tde_version}
+BuildRequires:  tqt3-dev-tools
 BuildRequires:	desktop-file-utils
 
 BuildRequires:	trinity-tde-cmake >= %{tde_version}
@@ -115,7 +113,7 @@ BuildRequires:  pkgconfig(udev)
 %{?with_hal:BuildRequires:	hal-devel}
 
 # DBUS support
-BuildRequires:	trinity-dbus-tqt-devel >= 1:0.63
+BuildRequires:	pkgconfig(dbus-tqt)
 Requires:		trinity-dbus-tqt >= 1:0.63
 
 # SNDFILE support
