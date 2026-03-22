@@ -30,7 +30,7 @@
 
 Name:			trinity-%{tde_pkg}
 Version:		1.0.5
-Release:		%{?tde_version:%{tde_version}_}4
+Release:		%{?tde_version:%{tde_version}_}5
 Summary:		CD/DVD burning application
 Group:			Applications/Archiving
 URL:			http://www.trinitydesktop.org/
@@ -114,7 +114,6 @@ BuildRequires:  pkgconfig(udev)
 
 # DBUS support
 BuildRequires:	pkgconfig(dbus-tqt)
-Requires:		trinity-dbus-tqt >= 1:0.63
 
 # SNDFILE support
 %{?with_sndfile:BuildRequires:  pkgconfig(sndfile)}
