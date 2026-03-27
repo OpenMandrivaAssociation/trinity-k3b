@@ -30,7 +30,7 @@
 
 Name:			trinity-%{tde_pkg}
 Version:		1.0.5
-Release:		%{?tde_version:%{tde_version}_}5
+Release:		%{?tde_version:%{tde_version}_}6
 Summary:		CD/DVD burning application
 Group:			Applications/Archiving
 URL:			http://www.trinitydesktop.org/
@@ -58,7 +58,6 @@ BuildOption:    -DWITH_MAD=%{!?with_libmad:OFF}%{?with_libmad:ON}
 
 BuildRequires:	trinity-tdelibs-devel >= %{tde_version}
 BuildRequires:	trinity-tdebase-devel >= %{tde_version}
-BuildRequires:  tqt3-dev-tools
 BuildRequires:	desktop-file-utils
 
 BuildRequires:	trinity-tde-cmake >= %{tde_version}
