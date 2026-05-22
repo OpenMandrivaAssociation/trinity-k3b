@@ -10,10 +10,6 @@
 %bcond musepack 1
 
 # TDE variables
-%if "%{?tde_version}" == ""
-%define tde_version 14.1.5
-%endif
-
 %define tde_pkg k3b
 %define tde_prefix /opt/trinity
 
@@ -23,14 +19,14 @@
 %define _disable_rebuild_configure 1
 
 # fixes error: Empty %files file …/debugsourcefiles.list
-%define _debugsource_template %{nil}
+%undefine _debugsource_template
 
 %define tarball_name %{tde_pkg}-trinity
 
 
 Name:			trinity-%{tde_pkg}
-Version:		1.0.5
-Release:		%{?tde_version:%{tde_version}_}6
+Version:		14.1.6
+Release:		1
 Summary:		CD/DVD burning application
 Group:			Applications/Archiving
 URL:			http://www.trinitydesktop.org/
@@ -38,7 +34,7 @@ URL:			http://www.trinitydesktop.org/
 License:	GPLv2+
 
 
-Source0:		https://mirror.ppa.trinitydesktop.org/trinity/releases/R%{tde_version}/main/applications/multimedia/%{tarball_name}-%{tde_version}.tar.xz
+Source0:		https://mirror.ppa.trinitydesktop.org/trinity/releases/R%{version}/main/applications/multimedia/%{tarball_name}-%{version}.tar.xz
 Source1:		%{name}-rpmlintrc
 
 BuildSystem:    cmake
@@ -56,11 +52,11 @@ BuildOption:    -DWITH_MUSEPACK=%{!?with_musepack:OFF}%{?with_musepack:ON}
 BuildOption:    -DWITH_LAME=%{!?with_lame:OFF}%{?with_lame:ON}
 BuildOption:    -DWITH_MAD=%{!?with_libmad:OFF}%{?with_libmad:ON}
 
-BuildRequires:	trinity-tdelibs-devel >= %{tde_version}
-BuildRequires:	trinity-tdebase-devel >= %{tde_version}
+BuildRequires:	trinity-tdelibs-devel >= %{version}
+BuildRequires:	trinity-tdebase-devel >= %{version}
 BuildRequires:	desktop-file-utils
 
-BuildRequires:	trinity-tde-cmake >= %{tde_version}
+BuildRequires:	trinity-tde-cmake >= %{version}
 
 %{!?with_clang:BuildRequires:	gcc-c++}
 
@@ -95,8 +91,8 @@ BuildRequires:  pkgconfig(libattr)
 Requires(post): coreutils
 Requires(postun): coreutils
 
-Requires:		%{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
-Requires:		%{name}-common = %{?epoch:%{epoch}:}%{version}-%{release}
+Requires:		%{name}-libs = %{EVRD}
+Requires:		%{name}-common = %{EVRD}
 
 Requires:		cdrecord
 Requires:		mkisofs
@@ -198,7 +194,7 @@ start.
 %package common
 Summary:		Common files of %{name}
 Group:			Applications/Archiving
-Requires:		%{name} = %{?epoch:%{epoch}:}%{version}-%{release}
+Requires:		%{name} = %{EVRD}
 BuildArch: noarch
 
 %description common
@@ -230,7 +226,7 @@ BuildArch: noarch
 %package libs
 Summary:		Runtime libraries for %{name}
 Group:			System Environment/Libraries
-Requires:		%{name} = %{?epoch:%{epoch}:}%{version}-%{release}
+Requires:		%{name} = %{EVRD}
 
 %description libs
 %{summary}.
@@ -247,7 +243,7 @@ Requires:		%{name} = %{?epoch:%{epoch}:}%{version}-%{release}
 %package devel
 Summary:		Files for the development of applications which will use %{name} 
 Group:			Development/Libraries
-Requires:		%{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
+Requires:		%{name}-libs = %{EVRD}
 
 %description devel
 %{summary}.
@@ -264,7 +260,7 @@ Requires:		%{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
 %package plugin-mad
 Summary:		The MAD plugin for K3B
 Group:			System Environment/Libraries
-Requires:		%{name} = %{?epoch:%{epoch}:}%{version}-%{release}
+Requires:		%{name} = %{EVRD}
 
 %description plugin-mad
 %{summary}.
@@ -286,7 +282,7 @@ and Layer III a.k.a. MP3) are fully implemented.
 %package plugin-lame
 Summary:		The LAME plugin for K3B
 Group:			System Environment/Libraries
-Requires:		%{name} = %{?epoch:%{epoch}:}%{version}-%{release}
+Requires:		%{name} = %{EVRD}
 
 %description plugin-lame
 %{summary}.
@@ -308,7 +304,7 @@ This package is in tainted, as MP3 encoding is covered by software patents.
 %package plugin-ffmpeg
 Summary:		The FFMPEG plugin for K3B
 Group:			System Environment/Libraries
-Requires:		%{name} = %{?epoch:%{epoch}:}%{version}-%{release}
+Requires:		%{name} = %{EVRD}
 
 %description plugin-ffmpeg
 %{summary}.
